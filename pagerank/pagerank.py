@@ -2,7 +2,6 @@ import os
 import random
 import re
 import sys
-import math
 
 DAMPING = 0.85
 SAMPLES = 10000
@@ -63,15 +62,19 @@ def transition_model(corpus, page, damping_factor):
 
     random_choice = (1-damping_factor) * 1/len(corpus)
 
-    if len(corpus[page]) > 0:
-        for current_page in corpus:
-            if current_page != page:
+    for current_page in corpus:
+        if len(corpus[page]) > 0:
+            if current_page in corpus[page]:
                 probabilities[current_page] = random_choice + damping_factor * 1/len(corpus[page])
             else:
                 probabilities[current_page] = random_choice
-    else:
-        for current_page in corpus:
-            probabilities[current_page] = random_choice
+        else:
+            probabilities[current_page] = 1/len(corpus)
+
+    # if round(sum(list(probabilities.values())), 5) != 1:
+    #     print("transition: Not equal to 1")
+    # else:
+    #     print("transition: deu bom")
 
     return probabilities
 
@@ -96,15 +99,22 @@ def sample_pagerank(corpus, damping_factor, n):
     for _ in range(n):
         if actual_page:
             prob_dict = transition_model(corpus, actual_page, damping_factor)
-            weights = list(prob_dict.items())
+            
+            weights = list(prob_dict.values())
 
             chosen_sample = random.choices(pages, weights, k=1)[0]
 
-            actual_page = chosen_sample
         else:
             chosen_sample = random.choice(pages)
 
+        actual_page = chosen_sample
+
         pageRank[chosen_sample] += 1/n
+
+    # if round(sum(list(pageRank.values())), 5) != 1:
+    #     print("sample: Not equal to 1")
+    # else:
+    #     print("sample: deu bom")
 
     return pageRank
 
@@ -125,38 +135,41 @@ def iterate_pagerank(corpus, damping_factor):
     for page in pageRank:
         pageRank[page] = 1/n
 
-    actual_page = None
-    chosen_sample = None
     pages = list(pageRank.keys())
-
 
     active = True
     while active:
         
         oldProbabilities = pageRank.copy()
         
-        for page in pages:
+        for p in pages:
 
-            temp_sum = 0
+            # first part of the equation
+            pageRank[p] = (1-damping_factor)/n 
 
+            # seconf part of the equation
             for i in pages:
-                if i in corpus[page]:
-                    temp_sum += damping_factor * oldProbabilities[i]/len(corpus[i])
+                # if page i links to page p
+                if p in corpus[i]:
+                    pageRank[p] += damping_factor * oldProbabilities[i]/len(corpus[i])
 
+                # if page i has no links, it's interpreted that it has links to all other pages
                 if len(corpus[i]) == 0:
-                    temp_sum += damping_factor * oldProbabilities[i]/n
+                    pageRank[p] += damping_factor * oldProbabilities[i]/n
             
-            temp_sum += (1-damping_factor)/n
-
-            pageRank[page] = temp_sum
-
         active = False
         for page in pages:
             dif = abs(pageRank[page] - oldProbabilities[page])
 
             if dif > 0.001:
                 active = True
+                break
 
+    # if round(sum(list(pageRank.values())), 5) != 1:
+    #     print("--- iterate: Not equal to 1")
+    # else:
+    #     print("--- iterate: deu bom")
+            
     return pageRank
 
 if __name__ == "__main__":

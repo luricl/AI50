@@ -171,24 +171,24 @@ def joint_probability(people, one_gene, two_genes, have_trait):
 
             # calculate the probability that a person got the gene from his/her mother
             if mother in one_gene:
-                prob_gene_from_parents["mother"] = 0.5 * (1 - PROBS["mutation"])
+                prob_gene_from_parents["mother"] = 0.5
             elif mother in two_genes:
-                prob_gene_from_parents["mother"] = 1 - PROBS["mutation"]
+                prob_gene_from_parents["mother"] = 1 * (1 - PROBS["mutation"])
             else:
                 prob_gene_from_parents["mother"] = PROBS["mutation"]
             
             # calculate the probability that a person got the gene from his/her father
             if father in one_gene:
-                prob_gene_from_parents["father"] = 0.5 * (1 - PROBS["mutation"])
+                prob_gene_from_parents["father"] = 0.5
             elif father in two_genes:
-                prob_gene_from_parents["father"] = 1 - PROBS["mutation"]
+                prob_gene_from_parents["father"] = 1 * (1 - PROBS["mutation"])
             else:
                 prob_gene_from_parents["father"] = PROBS["mutation"]
 
             if genes == 0:
                 prob_have_the_number_of_genes *= (1 - prob_gene_from_parents["father"]) * (1 - prob_gene_from_parents["mother"])
             
-            # probability that the person got the gene from his mother only or from his father only
+            # probability that the person got the gene either from their mother or their father
             elif genes == 1:
                 prob_have_the_number_of_genes *= prob_gene_from_parents["mother"] * (1 - prob_gene_from_parents["father"]) +\
                                 prob_gene_from_parents["father"] * (1 - prob_gene_from_parents["mother"])
@@ -213,7 +213,7 @@ def update(probabilities, one_gene, two_genes, have_trait, p):
     the person is in `have_gene` and `have_trait`, respectively.
     """
 
-    for person in probabilities:
+    for person in probabilities.keys():
         
         genes = get_number_of_genes(person, one_gene, two_genes)
 
@@ -234,41 +234,52 @@ def normalize(probabilities):
     t_p = 0
 
     for person in probabilities:
-        total = 0
+        total_genes = 0
+        total_trait = 0
         
         for i in range(0, 3):
-            total += probabilities[person]["gene"][i]
+            total_genes += probabilities[person]["gene"][i]
 
-            if probabilities[person]["gene"][i]:
-                g_p = probabilities[person]["gene"][i]
+            # # debug
+            # if probabilities[person]["gene"][i]:
+            #     g_p = probabilities[person]["gene"][i]
         
-        total += probabilities[person]["trait"][True] + probabilities[person]["trait"][False]
+        total_trait += probabilities[person]["trait"][True] + probabilities[person]["trait"][False]
 
-        if probabilities[person]["trait"][True]:
-            t_p = probabilities[person]["trait"][True]
-        else:
-            t_p = probabilities[person]["trait"][False]             
+        # # debug
+        # if probabilities[person]["trait"][True]:
+        #     t_p = probabilities[person]["trait"][True]
+        # else:
+        #     t_p = probabilities[person]["trait"][False]             
 
-        print(f"\n--> starting probabilities: {g_p}, {t_p}")
+        # print(f"\n--> starting probabilities: {g_p}, {t_p}, {total}")
 
-        a = 1/total 
+        a_genes = 1/total_genes 
+        a_trait = 1/total_trait 
+
+        # # debug
+        # total = 0
 
         for i in range(0, 3):
-            probabilities[person]["gene"][i] *= a
+            probabilities[person]["gene"][i] *= a_genes
 
-            if probabilities[person]["gene"][i]:
-                g_p = probabilities[person]["gene"][i]
+            # # debug
+            # total += probabilities[person]["gene"][i]
+            # if probabilities[person]["gene"][i]:
+            #     g_p = probabilities[person]["gene"][i]
         
         
-        probabilities[person]["trait"][True] *= a
-        probabilities[person]["trait"][False] *= a
+        probabilities[person]["trait"][True] *= a_trait
+        probabilities[person]["trait"][False] *= a_trait
 
-        if probabilities[person]["trait"][True]:
-            t_p = probabilities[person]["trait"][True]
-        else:
-            t_p = probabilities[person]["trait"][False]             
+        # # debug
+        # total += probabilities[person]["trait"][True] + probabilities[person]["trait"][False]
+        # if probabilities[person]["trait"][True]:
+        #     t_p = probabilities[person]["trait"][True]
+        # else:
+        #     t_p = probabilities[person]["trait"][False]             
 
-        print(f"\n--> final probabilities: {g_p}, {t_p}")
+        # print(f"\n--> final probabilities: {g_p}, {t_p}, {total}")
 
 if __name__ == "__main__":
     main()
